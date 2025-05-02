@@ -51,7 +51,7 @@ That elapsed is used also to decide if a full speech is concluded, generating ev
                                                |                         |
                                  MAX_INTERSPEECH_SILENCE_MSECS    POST_SPEECH_MSECS
 */                                                      
-const MAX_INTERSPEECH_SILENCE_MSECS = 600
+const MAX_INTERSPEECH_SILENCE_MSECS = 1000 // 600
 const POST_SPEECH_MSECS = MAX_INTERSPEECH_SILENCE_MSECS
 
 
@@ -109,7 +109,7 @@ the event 'abortrecording' is generated.
                               |
                        MIN_SIGNAL_DURATION  
 */
-const MIN_SIGNAL_DURATION = 400
+const MIN_SIGNAL_DURATION = 100 // 400
 
 
 /*
@@ -125,7 +125,7 @@ silence (background noise)
 mute (microphone off)
 
 */
-const VOLUME_SIGNAL = 0.02
+const VOLUME_SIGNAL = 0.07 // 0.02
 const VOLUME_SILENCE = 0.001
 const VOLUME_MUTE = 0.0001
 

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>telcenter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!--  visibility: active ? 'visible' : 'hidden' -->
+    <!-- <div class="absolute top-0 left-0 w-full h-full" style="z-index: 99999; background: #fff;"></div> -->
+
+    <!-- background when dialing -->
+    <div id="background-when-dialing"
+        class="absolute flex justify-center items-start overflow-hidden w-full h-full top-0 left-0"
+        style="visibility: visible; z-index: 99999; height: 100%; width: 100%; transform-origin: center center 0px; background: radial-gradient(1000px at 50% calc(75px + 50vh), rgb(6, 135, 241) 0%, rgba(23, 114, 180, 0.267) 0%, rgb(24, 24, 27) 100%);">
+        <svg id="line-circle" width="256px" height="256px" viewBox="0 0 500 100%"
+            class="top-0 absolute overflow-visible origin-center pt-[25vh]"></svg>
+    </div>
+
+    <!-- background when in call -->
+    <div id="background-when-in-call"
+        class="absolute flex justify-center items-start overflow-hidden w-full h-full top-0 left-0"
+        style="visibility: hidden; z-index: 99999; top: 0; height: 100%; width: 100%; transform-origin: center center 0px; background: radial-gradient(1012.8px at 50% calc(75px + 100vh), rgb(6, 135, 241) 0%, rgba(23, 114, 180, 0.267) 30%, rgb(24, 24, 27) 100%);">
+        <svg id="line-circle" width="256px" height="256px" viewBox="0 0 500 100%"
+            class="top-0 absolute overflow-visible origin-center pt-[25vh]" />
+    </div>
+
+    <audio id="audio" controls style="display: none;"></audio>
+
+    <div class="absolute top-0 left-0 w-full h-full flex flex-col justify-evenly items-center py-16"
+        style="visibility: visible; z-index: 99999; background: transparent">
+        <div class="w-32 h-32 rounded-full overflow-hidden">
+            <img src="telcenter/images/default-user-avatar.png" alt="Avatar" class="w-full h-full object-cover" />
+        </div>
+
+        <div id="please-wait" style="visibility: hidden;">Please wait...</div>
+
+        <div class="flex flex-row space-x-8">
+            <!-- Microphone Button -->
+            <div class="flex flex-col items-center">
+                <button id="microphone-button"
+                    class="mb-1 w-14 h-14 bg-white rounded-full flex items-center justify-center text-black hover:text-white border border-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                    type="button">
+                    <!-- Microphone enabled -->
+                    <svg id="microphone-enabled" style="display: inherit;" width="38" height="38" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" color="var(--icon-primary)">
+                        <path
+                            d="M12 19v2M12 19c-3.5 0-6-2.5-7-4M12 19c3.5 0 6-2.5 7-4M15.5 7.5v3.5c0 1.933-1.567 3.5-3.5 3.5S8.5 12.933 8.5 11V7.5C8.5 5.567 10.067 4 12 4s3.5 1.567 3.5 3.5Z"
+                            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+
+                    <!-- Microphone disabled -->
+                    <svg id="microphone-disabled" style="display: none;" width="38" height="38" viewBox="0 0 24 24"
+                        fill="none" xmlns="http://www.w3.org/2000/svg" color="var(--icon-inverted)">
+                        <path
+                            d="M12 21v-2M12 19c-3.5 0-6-2.5-7-4M12 19c2.5 0 4.25-1 5.5-2M9 5.5C9.5 5 10.5 4.5 12 4.5c2.5 0 3.5 2 3.5 3.5v3M8 8.5v3c0 2.5 2 3.5 3.5 3.5.833 0 1.5-.333 2-.833M8 8.5l7 7M8 8.5L3 3.5l18 18-3.5-3.5M8 8.5l7 7"
+                            strokeWidth="1.5" stroke="currentColor" strokeLinecap="round" />
+                    </svg>
+                </button>
+                <!-- Or Unmute! -->
+                <span id="microphone-text" class="text-sm mt-1">Mute</span>
+            </div>
+
+            <!-- Hangup Button -->
+            <div class="flex flex-col items-center">
+                <button id="hangup-button"
+                    class="mb-1 w-14 h-14 rounded-full flex items-center justify-center bg-black text-white hover:text-black hover:bg-gray-600 hover:border-gray-600 border border-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                    type="button">
+                    <svg width="38" height="38" viewBox="0 0 29 28" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#clip0_4103_8518)">
+                            <g clipPath="url(#clip1_4103_8518)">
+                                <path
+                                    d="M26.6224 17.0963C28.2852 15.4335 28.4408 12.4995 26.2875 10.98C19.4604 6.16245 10.2769 6.16245 3.44984 10.98C1.29654 12.4995 1.45207 15.4335 3.11485 17.0963C4.48182 18.4633 6.58361 18.7718 8.28573 17.8552L9.35227 17.2809C10.4198 16.7061 11.0856 15.5915 11.0856 14.379C11.0856 13.9392 11.3544 13.6426 11.6448 13.5743C13.7626 13.0755 15.9747 13.0755 18.0925 13.5743C18.3828 13.6426 18.6517 13.9392 18.6517 14.379C18.6517 15.5915 19.3175 16.7061 20.385 17.2809L21.4516 17.8552C23.1537 18.7718 25.2555 18.4633 26.6224 17.0963Z"
+                                    fill="#CE365C"></path>
+                            </g>
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_4103_8518">
+                                <rect width="28" height="28" fill="white" transform="translate(0.25)"></rect>
+                            </clipPath>
+                            <clipPath id="clip1_4103_8518">
+                                <rect width="28" height="28" fill="white" transform="translate(34.668 14) rotate(135)">
+                                </rect>
+                            </clipPath>
+                        </defs>
+                    </svg>
+                </button>
+                <span class="text-sm mt-1">End Call</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="volume-meter.js"></script>
+    <script src="audioDetectionConfig.js"></script>
+    <script src="audioDetection.js"></script>
+    <script src="audioStream.js"></script>
+
+    <script src="telcenter/index-helpers.js"></script>
+    <script src="libraries/extendable-media-recorder.js"></script>
+
+    <script src="telcenter/config.js"></script>
+    <script src="telcenter/audio-recorder.js"></script>
+    <script src="telcenter/audio-detection-listeners.js"></script>
+    <script src="telcenter/index.js"></script>
+</body>
+
+</html>
