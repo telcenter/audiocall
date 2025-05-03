@@ -26,18 +26,12 @@ function onRecordingReady(e) {
             const formData = new FormData();
             formData.append('file', e.data, "recording.wav");
 
-            fetch(`${STT_BACKEND_URL}/stt`, {
+            fetch(`${STT_BACKEND_URL}/stt-and-ser`, {
                 method: 'POST',
                 body: formData,
             })
                 .then(res => res.json())
-                .then(data => {
-                    if (data?.error) {
-                        alert(`API Error: ${data.error}`);
-                    } else {
-                        alert(`Transcription: ${data.text}`);
-                    }
-                })
+                .then(onSTTAndSERReady)
                 .catch(err => alert(`Failed: ${err}`));
         } finally {
             resumeRecording();
