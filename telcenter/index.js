@@ -4,6 +4,11 @@ window.onload = async function () {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
     $("#microphone-button").addEventListener('click', async function () {
+        if (VoiceDetectionData.firstTime) {
+            VoiceDetectionData.firstTime = false;
+            $("#greeting-audio").play();
+        }
+
         // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/suspend#examples
         if (audioContext === null) {
             audioContext = new AudioContext();

@@ -1,5 +1,3 @@
-// $("greeting-audio").play();
-
 const params = new URLSearchParams(window.location.search);
 const VoiceDetectionData = {
     recorder: null,
@@ -7,6 +5,8 @@ const VoiceDetectionData = {
     chatId: parseInt(params.get('chatId')),
     accountId: parseInt(params.get('accountId')),
     phoneNumber: "" + (params.get('phoneNumber') || ""),
+    firstTime: true,
+    isSpeaking: false,
 };
 
 if (!VoiceDetectionData.chatId || !VoiceDetectionData.accountId || !VoiceDetectionData.phoneNumber) {
@@ -22,6 +22,10 @@ function audioRecorder(stream) {
 }
 
 async function onRecordingReady(e) {
+    if (VoiceDetectionData.isSpeaking) {
+        return;
+    }
+
     if (VoiceDetectionData.isRecordingReady) {
         suspendRecording();
 
@@ -41,7 +45,7 @@ async function onRecordingReady(e) {
 
             if (stt?.error || ser?.error) {
                 // alert(`API Error:\nSTT: ${stt?.error || "(None)"}\nSER: ${ser?.error || "(None)"}`);
-                // $("repeat-audio").play();
+                $("#repeat-audio").play();
                 return;
             }
             console.log(`Transcription: ${stt.text}\n\nEmotion: ${ser.emotion}`);
@@ -77,26 +81,61 @@ async function onRecordingReady(e) {
             //////////////////////// STT /////////////////////////
             //////////////////////////////////////////////////////
 
-            const replyAudioRes = await fetch(`${STT_BACKEND_URL}/tts`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: replyMessage,
-                }),
-            });
+            const audioUrls = await Promise.all(
+                replyMessage.split('. ').map(async sentence => {
+                    const replyAudioRes = await fetch(`${STT_BACKEND_URL}/tts`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: sentence,
+                        }),
+                    });
 
-            if (!replyAudioRes.ok) throw new Error("Failed to fetch audio");
-            const blob = await replyAudioRes.blob(); // Get MP3 as Blob
+                    if (!replyAudioRes.ok) throw new Error("Failed to fetch audio");
+                    const blob = await replyAudioRes.blob(); // Get MP3 as Blob
+                    const blobUrl = URL.createObjectURL(blob); // Create a URL for the Blob
+                    return blobUrl; // Return the URL
+                })
+            );
 
             const audio = $("#audio");
-            audio.src = URL.createObjectURL(blob); // e.data → blob here
-            audio.play();
-            audio.onended = () => {
-                URL.revokeObjectURL(audio.src); // cleanup
-                resumeRecording();              // your callback
-            };
+            // let i = 0;
+            // for (const audioUrl of audioUrls) {
+            //     audio.src = audioUrl;
+            //     if (i == audioUrls.length - 1) {
+            //         audio.onended = () => {
+            //             URL.revokeObjectURL(audio.src); // cleanup
+            //             resumeRecording();              // your callback
+            //         };
+            //     } else {
+            //         audio.onended = () => {
+            //             URL.revokeObjectURL(audio.src); // cleanup
+            //         };
+            //     }
+            //     ++i;
+            // }
+
+            let i = 0;
+            VoiceDetectionData.isSpeaking = true;
+
+            function playNext() {
+                if (i < audioUrls.length) {
+                    audio.src = audioUrls[i];
+                    audio.play();
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audio.src); // cleanup
+                        i++;
+                        playNext(); // play the next audio
+                    };
+                } else {
+                    resumeRecording(); // all done, resume recording
+                    VoiceDetectionData.isSpeaking = false;
+                }
+            }
+
+            playNext();
         } finally {
             resumeRecording();
         }
